@@ -1,89 +1,50 @@
-const API_URL = "https://finnhub.io/api/v1";
+import { fetchStockPrice, fetchTickerMatches } from "./api.js";
+import { drawTickerOption, drawTickerSearch, getFirstMatches } from "./tickers.js";
 
 const view = {
    app: document.getElementById("app"),
 };
 
 const data = {
-   symbols: [],
+   matches: [],
 };
 
-// These elements only exist after the component is drawn, so they're cached here
+// These elements only exist after the component is drawn, so they're cached here.
 view.app.innerHTML = drawTickerSearch();
 view.tickerSearch = document.getElementById("ticker-search");
 view.tickerResults = document.getElementById("ticker-results");
 
-async function fetchStockPrice(symbol) {
-   try {
-      const response = await fetch(`${API_URL}/quote?symbol=${symbol}&token=${API_KEY}`);
-      if (!response.ok) {
-         throw new Error(`Request failed: ${response.status}`);
-      }
-      const quote = await response.json();
-      const currentPrice = quote.c;
-      // Finnhub answers 200 with a price of 0 for a symbol it doesn't recognise
-      if (!currentPrice) {
-         throw new Error(`No price returned for ${symbol}`);
-      }
-      console.log(`${symbol}: $${currentPrice}`);
-   } catch (error) {
-      console.error("fetchStockPrice failed:", error);
-   }
-}
-
-function drawTickerSearch() {
-   return `
-      <input id="ticker-search" type="text" placeholder="Search ticker" autocomplete="off" />
-      <select id="ticker-results" size="3" hidden></select>`;
-}
-
-function drawTickerOption(symbol) {
-   return `<option value="${symbol}">${symbol}</option>`;
-}
-
 function updateView() {
    let options = "";
-   for (const symbol of data.symbols) {
-      options += drawTickerOption(symbol);
+   for (const match of data.matches) {
+      options += drawTickerOption(match);
    }
    view.tickerResults.innerHTML = options;
-   view.tickerResults.hidden = data.symbols.length === 0;
-}
-
-function getFirstSymbols(matches) {
-   const symbols = [];
-   for (let i = 0; i < matches.length && i < 3; i++) {
-      symbols.push(matches[i].symbol);
-   }
-   return symbols;
+   view.tickerResults.hidden = data.matches.length === 0;
 }
 
 async function searchTickers(query) {
    if (!query) {
-      data.symbols = [];
+      data.matches = [];
       updateView();
       return;
    }
    try {
-      const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}&token=${API_KEY}`);
-      if (!response.ok) {
-         throw new Error(`Request failed: ${response.status}`);
-      }
-      const searchResponse = await response.json();
+      const matches = await fetchTickerMatches(query);
       // Responses can arrive out of order, so ignore one for text no longer in the input
       if (query !== view.tickerSearch.value) return;
-      data.symbols = getFirstSymbols(searchResponse.result);
+      data.matches = getFirstMatches(matches);
       updateView();
    } catch (error) {
       console.error("searchTickers failed:", error);
    }
 }
 
-function selectTicker(symbol) {
-   view.tickerSearch.value = symbol;
-   data.symbols = [];
+function selectTicker(match) {
+   view.tickerSearch.value = match.symbol;
+   data.matches = [];
    updateView();
-   fetchStockPrice(symbol);
+   fetchStockPrice(match.symbol, match.description);
 }
 
 addEventListener("input", (event) => {
@@ -91,11 +52,11 @@ addEventListener("input", (event) => {
 });
 
 addEventListener("change", (event) => {
-   if (event.target.id === "ticker-results") selectTicker(event.target.value);
+   if (event.target.id === "ticker-results") selectTicker(data.matches[event.target.selectedIndex]);
 });
 
 addEventListener("keydown", (event) => {
-   if (event.target.id === "ticker-search" && event.key === "Enter" && data.symbols.length === 1) {
-      selectTicker(data.symbols[0]);
+   if (event.target.id === "ticker-search" && event.key === "Enter" && data.matches.length === 1) {
+      selectTicker(data.matches[0]);
    }
 });
