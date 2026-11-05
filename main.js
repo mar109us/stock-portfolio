@@ -1,39 +1,22 @@
 import { fetchStockPrice, fetchTickerMatches } from "./api.js";
-import { drawTickerOption, drawTickerSearch, getFirstMatches } from "./tickers.js";
+import { getFirstMatches } from "./tickers.js";
+import { data } from "./data.js";
+import { updateView } from "./view.js";
 
-const view = {
-   app: document.getElementById("app"),
-};
-
-const data = {
-   matches: [],
-};
-
-// These elements only exist after the component is drawn, so they're cached here.
-view.app.innerHTML = drawTickerSearch();
-view.tickerSearch = document.getElementById("ticker-search");
-view.tickerResults = document.getElementById("ticker-results");
-
-function updateView() {
-   let options = "";
-   for (const match of data.matches) {
-      options += drawTickerOption(match);
-   }
-   view.tickerResults.innerHTML = options;
-   view.tickerResults.hidden = data.matches.length === 0;
-}
+updateView();
 
 async function searchTickers(query) {
+   data.temporary.ticker.input = query;
    if (!query) {
-      data.matches = [];
+      data.temporary.ticker.matches = [];
       updateView();
       return;
    }
    try {
       const matches = await fetchTickerMatches(query);
       // Responses can arrive out of order, so ignore one for text no longer in the input
-      if (query !== view.tickerSearch.value) return;
-      data.matches = getFirstMatches(matches);
+      if (query !== data.temporary.ticker.input) return;
+      data.temporary.ticker.matches = getFirstMatches(matches);
       updateView();
    } catch (error) {
       console.error("searchTickers failed:", error);
@@ -41,8 +24,8 @@ async function searchTickers(query) {
 }
 
 function selectTicker(match) {
-   view.tickerSearch.value = match.symbol;
-   data.matches = [];
+   data.temporary.ticker.input = match.symbol;
+   data.temporary.ticker.matches = [];
    updateView();
    fetchStockPrice(match.symbol, match.description);
 }
@@ -52,11 +35,11 @@ addEventListener("input", (event) => {
 });
 
 addEventListener("change", (event) => {
-   if (event.target.id === "ticker-results") selectTicker(data.matches[event.target.selectedIndex]);
+   if (event.target.id === "ticker-results") selectTicker(data.temporary.ticker.matches[event.target.selectedIndex]);
 });
 
 addEventListener("keydown", (event) => {
-   if (event.target.id === "ticker-search" && event.key === "Enter" && data.matches.length === 1) {
-      selectTicker(data.matches[0]);
+   if (event.target.id === "ticker-search" && event.key === "Enter" && data.temporary.ticker.matches.length === 1) {
+      selectTicker(data.temporary.ticker.matches[0]);
    }
 });
