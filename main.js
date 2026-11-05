@@ -1,22 +1,22 @@
 import { fetchStockPrice, fetchTickerMatches } from "./api.js";
 import { getFirstMatches } from "./tickers.js";
 import { data } from "./data.js";
-import { updateView } from "./view.js";
+import { updateView, view } from "./view.js";
 
 updateView();
 
 async function searchTickers(query) {
-   data.temporary.ticker.input = query;
+   data.ticker.input = query;
    if (!query) {
-      data.temporary.ticker.matches = [];
+      data.ticker.matches = [];
       updateView();
       return;
    }
    try {
       const matches = await fetchTickerMatches(query);
       // Responses can arrive out of order, so ignore one for text no longer in the input
-      if (query !== data.temporary.ticker.input) return;
-      data.temporary.ticker.matches = getFirstMatches(matches);
+      if (query !== data.ticker.input) return;
+      data.ticker.matches = getFirstMatches(matches);
       updateView();
    } catch (error) {
       console.error("searchTickers failed:", error);
@@ -24,8 +24,9 @@ async function searchTickers(query) {
 }
 
 function selectTicker(match) {
-   data.temporary.ticker.input = match.symbol;
-   data.temporary.ticker.matches = [];
+   data.ticker.input = match.symbol;
+   data.ticker.matches = [];
+   view.tickerSearch.value = match.symbol;
    updateView();
    fetchStockPrice(match.symbol, match.description);
 }
@@ -35,11 +36,11 @@ addEventListener("input", (event) => {
 });
 
 addEventListener("change", (event) => {
-   if (event.target.id === "ticker-results") selectTicker(data.temporary.ticker.matches[event.target.selectedIndex]);
+   if (event.target.id === "ticker-results") selectTicker(data.ticker.matches[event.target.selectedIndex]);
 });
 
 addEventListener("keydown", (event) => {
-   if (event.target.id === "ticker-search" && event.key === "Enter" && data.temporary.ticker.matches.length === 1) {
-      selectTicker(data.temporary.ticker.matches[0]);
+   if (event.target.id === "ticker-search" && event.key === "Enter" && data.ticker.matches.length === 1) {
+      selectTicker(data.ticker.matches[0]);
    }
 });

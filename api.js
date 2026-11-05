@@ -2,7 +2,7 @@ const API_URL = "https://finnhub.io/api/v1";
 
 export async function fetchStockPrice(symbol, description) {
    try {
-      const response = await fetch(`${API_URL}/quote?symbol=${symbol}&token=${API_KEY}`);
+      const response = await fetch(`${API_URL}/quote?symbol=${encodeURIComponent(symbol)}&token=${API_KEY}`);
       if (!response.ok) {
          throw new Error(`Request failed: ${response.status}`);
       }
