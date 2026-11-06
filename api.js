@@ -35,6 +35,11 @@ export async function fetchStockPrice(symbol) {
       const response = await fetch(
          `${API_URL}/quote?symbol=${encodeURIComponent(symbol)}&token=${data.API_KEY}`,
       );
+      // 401 means Finnhub rejected the key, so drop it and show the API form again
+      if (response.status === 401) {
+         data.isApiKeyValid = false;
+         localStorage.removeItem("finnhub");
+      }
       if (!response.ok) {
          throw new Error(`Request failed: ${response.status}`);
       }

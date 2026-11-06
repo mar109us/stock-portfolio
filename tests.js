@@ -133,6 +133,22 @@ test("fetchStockPrice returns null and logs an error when the request fails", as
    assertEqual(errorCalls[0][1].message, "Request failed: 500");
 });
 
+// Saves and restores the real key, because a 401 removes it from localStorage
+test("fetchStockPrice marks the key invalid on 401", async () => {
+   const storedKey = localStorage.getItem("finnhub");
+   const wasApiKeyValid = data.isApiKeyValid;
+   mockFetch({}, 401);
+   captureConsole("error");
+   const price = await fetchStockPrice("AAPL");
+   const isValidAfter = data.isApiKeyValid;
+   const storedKeyAfter = localStorage.getItem("finnhub");
+   data.isApiKeyValid = wasApiKeyValid;
+   if (storedKey !== null) localStorage.setItem("finnhub", storedKey);
+   assertEqual(price, null);
+   assertEqual(isValidAfter, false);
+   assertEqual(storedKeyAfter, null);
+});
+
 test("fetchTickerMatches returns the result list and encodes the query", async () => {
    const urls = mockFetch({ result: [{ symbol: "AAPL" }] });
    const matches = await fetchTickerMatches("a b");

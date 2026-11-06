@@ -9,7 +9,6 @@ const REFRESH_DELAY_PER_SYMBOL = 2000;
 
 loadSavedTickers();
 updateView();
-checkStoredApiKey();
 
 function loadSavedTickers() {
    // A corrupted value in localStorage makes JSON.parse throw, so log it and start with an empty list
@@ -18,12 +17,6 @@ function loadSavedTickers() {
    } catch (error) {
       console.error("loadSavedTickers failed:", error);
    }
-}
-
-async function checkStoredApiKey() {
-   if (!data.API_KEY) return;
-   data.isApiKeyValid = await verifyApiKey(data.API_KEY);
-   updateView();
 }
 
 // Only store the key once Finnhub accepts it, so a typo never ends up in localStorage
