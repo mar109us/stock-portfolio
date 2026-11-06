@@ -36,11 +36,18 @@ addEventListener("input", (event) => {
 });
 
 addEventListener("change", (event) => {
-   if (event.target.id === "ticker-results") selectTicker(data.ticker.matches[event.target.selectedIndex]);
+   if (event.target.id === "ticker-results")
+      selectTicker(data.ticker.matches[event.target.selectedIndex]);
 });
 
 addEventListener("keydown", (event) => {
-   if (event.target.id === "ticker-search" && event.key === "Enter" && data.ticker.matches.length === 1) {
+   if (
+      event.target.id === "ticker-search" &&
+      event.key === "Enter" &&
+      data.ticker.matches.length === 1
+   ) {
       selectTicker(data.ticker.matches[0]);
    }
 });
+
+console.log("mew");
