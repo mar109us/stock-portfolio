@@ -1,9 +1,9 @@
 const MAX_TICKER_MATCHES = 3;
 
-export function drawTickerSearch() {
+export function drawTickerSearch(input, options) {
    return `
-      <input id="ticker-search" type="text" placeholder="Search ticker" autocomplete="off" />
-      <select id="ticker-results" size="${MAX_TICKER_MATCHES}" hidden></select>`;
+      <input id="ticker-search" type="text" placeholder="Search ticker" autocomplete="off" value="${escapeHtml(input)}" />
+      <select id="ticker-results" size="${MAX_TICKER_MATCHES}" ${options ? "" : "hidden"}>${options}</select>`;
 }
 
 function escapeHtml(text) {
@@ -14,6 +14,15 @@ export function drawTickerOption(match) {
    const symbol = escapeHtml(match.symbol);
    const description = escapeHtml(match.description);
    return `<option value="${symbol}">${symbol} - ${description}</option>`;
+}
+
+export function drawSavedTicker(savedTicker, isDuplicate) {
+   const symbol = escapeHtml(savedTicker.symbol);
+   const description = escapeHtml(savedTicker.description);
+   // ?? only falls back when price is null or undefined, so a real price always shows
+   const price = savedTicker.price ?? "…";
+   const duplicateLabel = isDuplicate ? " (duplicate)" : "";
+   return `<p>${symbol} - ${description}: $${price}${duplicateLabel}</p>`;
 }
 
 export function getFirstMatches(matches) {

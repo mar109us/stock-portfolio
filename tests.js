@@ -1,5 +1,6 @@
 import { fetchStockPrice, fetchTickerMatches } from "./api.js";
-import { drawTickerOption, drawTickerSearch, getFirstMatches } from "./tickers.js";
+import { drawSavedTicker, drawTickerOption, drawTickerSearch, getFirstMatches } from "./tickers.js";
+import { data } from "./data.js";
 
 const tests = [];
 
@@ -69,30 +70,49 @@ test("drawTickerOption escapes special characters", () => {
 });
 
 test("drawTickerSearch includes the ids main.js looks up", () => {
-   const markup = drawTickerSearch();
+   const markup = drawTickerSearch("", "");
    assertIncludes(markup, `id="ticker-search"`);
    assertIncludes(markup, `id="ticker-results"`);
 });
 
-test("fetchStockPrice logs the current price", async () => {
-   const urls = mockFetch({ c: 150 });
-   const logCalls = captureConsole("log");
-   await fetchStockPrice("AAPL", "APPLE INC");
-   assertIncludes(urls[0], `/quote?symbol=AAPL&token=${API_KEY}`);
-   assertEqual(logCalls[0][0], "AAPL - APPLE INC: $150");
+test("drawSavedTicker shows symbol, description and price", () => {
+   const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: 150 };
+   assertEqual(drawSavedTicker(savedTicker, false), "<p>AAPL - APPLE INC: $150</p>");
 });
 
-test("fetchStockPrice logs an error when the price is 0", async () => {
+test("drawSavedTicker marks duplicates", () => {
+   const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: 150 };
+   assertEqual(drawSavedTicker(savedTicker, true), "<p>AAPL - APPLE INC: $150 (duplicate)</p>");
+});
+
+test("drawSavedTicker shows a placeholder while the price is null", () => {
+   const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: null };
+   assertEqual(drawSavedTicker(savedTicker, false), "<p>AAPL - APPLE INC: $…</p>");
+});
+
+test("drawSavedTicker escapes special characters", () => {
+   const savedTicker = { symbol: "A<B", description: "AT&T", price: 1 };
+   assertEqual(drawSavedTicker(savedTicker, false), "<p>A&lt;B - AT&amp;T: $1</p>");
+});
+
+test("fetchStockPrice returns the current price", async () => {
+   const urls = mockFetch({ c: 150 });
+   const price = await fetchStockPrice("AAPL");
+   assertIncludes(urls[0], `/quote?symbol=AAPL&token=${data.API_KEY}`);
+   assertEqual(price, 150);
+});
+
+test("fetchStockPrice returns null and logs an error when the price is 0", async () => {
    mockFetch({ c: 0 });
    const errorCalls = captureConsole("error");
-   await fetchStockPrice("NOPE");
+   assertEqual(await fetchStockPrice("NOPE"), null);
    assertEqual(errorCalls[0][1].message, "No price returned for NOPE");
 });
 
-test("fetchStockPrice logs an error when the request fails", async () => {
+test("fetchStockPrice returns null and logs an error when the request fails", async () => {
    mockFetch({}, 500);
    const errorCalls = captureConsole("error");
-   await fetchStockPrice("AAPL");
+   assertEqual(await fetchStockPrice("AAPL"), null);
    assertEqual(errorCalls[0][1].message, "Request failed: 500");
 });
 
@@ -100,7 +120,7 @@ test("fetchTickerMatches returns the result list and encodes the query", async (
    const urls = mockFetch({ result: [{ symbol: "AAPL" }] });
    const matches = await fetchTickerMatches("a b");
    assertEqual(matches, [{ symbol: "AAPL" }]);
-   assertIncludes(urls[0], `/search?q=a%20b&token=${API_KEY}`);
+   assertIncludes(urls[0], `/search?q=a%20b&token=${data.API_KEY}`);
 });
 
 test("fetchTickerMatches throws when the request fails", async () => {
