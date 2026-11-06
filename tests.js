@@ -77,22 +77,39 @@ test("drawTickerSearch includes the ids main.js looks up", () => {
 
 test("drawSavedTicker shows symbol, description and price", () => {
    const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: 150 };
-   assertEqual(drawSavedTicker(savedTicker, false), "<p>AAPL - APPLE INC: $150</p>");
+   assertEqual(
+      drawSavedTicker(savedTicker, false, 0),
+      `<p>AAPL - APPLE INC: $150 <button class="delete-ticker" data-index="0">Delete</button></p>`,
+   );
 });
 
 test("drawSavedTicker marks duplicates", () => {
    const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: 150 };
-   assertEqual(drawSavedTicker(savedTicker, true), "<p>AAPL - APPLE INC: $150 (duplicate)</p>");
+   assertEqual(
+      drawSavedTicker(savedTicker, true, 0),
+      `<p>AAPL - APPLE INC: $150 (duplicate) <button class="delete-ticker" data-index="0">Delete</button></p>`,
+   );
 });
 
 test("drawSavedTicker shows a placeholder while the price is null", () => {
    const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: null };
-   assertEqual(drawSavedTicker(savedTicker, false), "<p>AAPL - APPLE INC: $…</p>");
+   assertEqual(
+      drawSavedTicker(savedTicker, false, 0),
+      `<p>AAPL - APPLE INC: $… <button class="delete-ticker" data-index="0">Delete</button></p>`,
+   );
 });
 
 test("drawSavedTicker escapes special characters", () => {
    const savedTicker = { symbol: "A<B", description: "AT&T", price: 1 };
-   assertEqual(drawSavedTicker(savedTicker, false), "<p>A&lt;B - AT&amp;T: $1</p>");
+   assertEqual(
+      drawSavedTicker(savedTicker, false, 0),
+      `<p>A&lt;B - AT&amp;T: $1 <button class="delete-ticker" data-index="0">Delete</button></p>`,
+   );
+});
+
+test("drawSavedTicker puts the index on the delete button", () => {
+   const savedTicker = { symbol: "AAPL", description: "APPLE INC", price: 150 };
+   assertEqual(drawSavedTicker(savedTicker, false, 3).includes(`data-index="3"`), true);
 });
 
 test("fetchStockPrice returns the current price", async () => {

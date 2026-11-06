@@ -4,7 +4,7 @@ import { data } from "./data.js";
 import { updateView } from "./view.js";
 
 // Finnhub's free tier allows 60 calls/min; 2s per symbol keeps refreshes at 30/min, leaving room for search
-const MIN_REFRESH_DELAY = 5000;
+const MIN_REFRESH_DELAY = 30000;
 const REFRESH_DELAY_PER_SYMBOL = 2000;
 
 loadSavedTickers();
@@ -56,7 +56,7 @@ async function searchTickers(query) {
 }
 
 async function selectTicker(match) {
-   data.ticker.input = match.symbol;
+   data.ticker.input = "";
    data.ticker.matches = [];
    saveTicker(match);
    updateView();
@@ -78,6 +78,13 @@ function saveTicker(match) {
 
 function storeSavedTickers() {
    localStorage.setItem("savedTickers", JSON.stringify(data.savedTickers));
+}
+
+// splice(index, 1) removes one item at index
+function deleteTicker(index) {
+   data.savedTickers.splice(index, 1);
+   storeSavedTickers();
+   updateView();
 }
 
 // One fetch per symbol updates all its duplicates; a failed fetch keeps the old price
@@ -121,6 +128,12 @@ function scheduleRefresh() {
 
 addEventListener("input", (event) => {
    if (event.target.id === "ticker-search") searchTickers(event.target.value);
+});
+
+// dataset.index is a string, so Number() turns it back into an array index
+addEventListener("click", (event) => {
+   if (event.target.classList.contains("delete-ticker"))
+      deleteTicker(Number(event.target.dataset.index));
 });
 
 addEventListener("change", (event) => {

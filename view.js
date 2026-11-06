@@ -31,10 +31,11 @@ function drawTickerResults() {
 
 function drawSavedTickers() {
    let html = "";
-   for (const savedTicker of data.savedTickers) {
+   for (let i = 0; i < data.savedTickers.length; i++) {
+      const savedTicker = data.savedTickers[i];
       // filter keeps the entries with the same symbol; more than one means it's a duplicate
       const sameSymbol = data.savedTickers.filter((other) => other.symbol === savedTicker.symbol);
-      html += drawSavedTicker(savedTicker, sameSymbol.length > 1);
+      html += drawSavedTicker(savedTicker, sameSymbol.length > 1, i);
    }
    return `<section id="saved-tickers">${html}</section>`;
 }
