@@ -4,7 +4,7 @@ export function drawTickerSearch(input, options) {
    return `
       <div class="column">
          <input id="ticker-search" type="text" placeholder="Search ticker" autocomplete="off" value="${escapeHtml(input)}" />
-         <select id="ticker-results" size="${MAX_TICKER_MATCHES}" ${options ? "" : "hidden"}>${options}</select>
+         <select id="ticker-results" size="${MAX_TICKER_MATCHES}" ${options ? "" : 'class="invisible"'}>${options}</select>
       </div>`;
 }
 
